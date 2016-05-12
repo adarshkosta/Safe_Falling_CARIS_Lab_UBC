@@ -53,21 +53,21 @@ ini_guess_impact = ini_guess_motion(X_0);
 %% Defining the upper and lower bounds of design variables (states)
 [Y_lb,Y_ub] = lub;
 % %% Solving the optimization problem 
-options = optimoptions(@fmincon,'Algorithm','active-set','MaxFunEvals',10^8,'MaxIter',4000,'TolX',1e-6,'TolCon',1e-6,'TolFun',1e-6,'Display','iter'); % setting desirable options for the optimization 
-[Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
+%options = optimoptions(@fmincon,'Algorithm','active-set','MaxFunEvals',10^8,'MaxIter',4000,'TolX',1e-6,'TolCon',1e-6,'TolFun',1e-6,'Display','iter'); % setting desirable options for the optimization 
+%[Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
 
 %% Generate CSV for state variables
-generateCSV(Y, 'stateVariables.csv',1);
+%generateCSV(Y, 'stateVariables.csv',1);
 
 %% Plotting the motion of the optimal solution
-optimal_result_impact = optim_result_motion(Y);
+%optimal_result_impact = optim_result_motion(Y);
 
 %% Plotting the joint characteristics during the fall including joint angle, angular velocity and torque
-Result_plotting(Y,X_0,optimal_result_impact,ini_guess_impact,Time);
+%Result_plotting(Y,X_0,optimal_result_impact,ini_guess_impact,Time);
 
 %% Saving data
 %save('Results')
 toc
 
-%genControllers('stateVariables.csv', 'dataForPi.csv')
+genControllers('stateVariables.csv', 'dataForPi.csv')
 
