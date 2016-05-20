@@ -10,8 +10,8 @@ global alpha beta N J_rotor L0 L1 L2 L3 L4 M1 M2 M3 rCOM_1 rCOM_2 rCOM_3 g rG_1 
 
 N = 64; %speed reduction factor
 J_rotor = 5.7e-7; %rotor inertia
-alpha = 1/2;  % Length scaling factor
-beta = 1/32;  % Mass scaling factor
+alpha = 1;  % Length scaling factor
+beta = 1;  % Mass scaling factor
 L = 1.60*alpha;  % Total height of the human subject
 M = 53.7*beta;  % Total mass of the human subject
 L0 = 0.039*L; % foot height
@@ -53,8 +53,8 @@ ini_guess_impact = ini_guess_motion(X_0);
 %% Defining the upper and lower bounds of design variables (states)
 [Y_lb,Y_ub] = lub;
 % %% Solving the optimization problem 
-%options = optimoptions(@fmincon,'Algorithm','active-set','MaxFunEvals',10^8,'MaxIter',4000,'TolX',1e-6,'TolCon',1e-6,'TolFun',1e-6,'Display','iter'); % setting desirable options for the optimization 
-%[Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
+options = optimoptions(@fmincon,'Algorithm','active-set','MaxFunEvals',10^8,'MaxIter',4000,'TolX',1e-6,'TolCon',1e-6,'TolFun',1e-6,'Display','iter'); % setting desirable options for the optimization 
+[Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
 
 %% Generate CSV for state variables
 %generateCSV(Y, 'stateVariables.csv',1);
@@ -69,5 +69,5 @@ ini_guess_impact = ini_guess_motion(X_0);
 %save('Results')
 toc
 
-genControllers('stateVariables.csv', 'dataForPi.csv')
+%genControllers('stateVariables.csv', 'dataForPi.csv')
 
