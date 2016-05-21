@@ -1,3 +1,5 @@
+//Roboclaw simple serial example.  Set mode to 5.  Option to 4(38400 bps)
+#include <SoftwareSerial.h>   //See limitations of Arduino SoftwareSerial
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -9,14 +11,17 @@
 #define S2 11
 
 #define POT_PIN A5
-#define PID_LIMIT 220
+#define PID_LIMIT 60
+#define ZERO_OFFSET 64
 
-const float kp[2] = {5.5, 5.5};
+SoftwareSerial mySerial(10,11);
+
+const float kp[2] = {2.5, 2.5};
 const float ki[2] = {0.0, 0.0};
 const float kd[2] = {0.0, 0.0};
 
 volatile int potAdc;
-volatile float target[2] = {30, 30};
+volatile float target[2] = {30, 90};
 volatile float error[2] = {0} , le[2] = {0};
 volatile double t = 0 , lt = 0 ,dt = 0 ;
 volatile float integral[2] = {0};
@@ -27,6 +32,9 @@ volatile double ankleAngle = 0;
 volatile int in[2];
 
 volatile int pwm[2];
+
+volatile int runTime = 0, startTime = 0;
+volatile int flag = 0;
 
 void PID()
 {
@@ -40,13 +48,15 @@ void PID()
     pid[i] = kp[i]*error[i] +ki[i]*integral[i] + kd[i]*diff[i];
       
     pwm[i] = (int)(constrain(pid[i],-PID_LIMIT,PID_LIMIT));
-    pwm[i] = pwm[i]*(-1);
-   
-    if (abs(pwm[i])<15)
+    
+    if (abs(pwm[i])<5)
     {
       pwm[i] = 0;
-    }
+    } 
   }  
+  pwm[0] = pwm[0]*(-1);
+  pwm[0] = pwm[0] + ZERO_OFFSET;  
+  pwm[1] = pwm[1] - ZERO_OFFSET;  
 }
 
 void setup() 
@@ -64,6 +74,9 @@ void setup()
   pinMode(enc1B, INPUT); 
   
   Serial.begin (115200);
+  mySerial.begin(38400);
+
+  startTime = millis();
 }
 
 void getAnkleAngle()
@@ -75,26 +88,68 @@ void getAnkleAngle()
 
 void _print()
 {
-    Serial.print("Pot_ADC: ");
-    Serial.print(potAdc);
-    Serial.print ("\tAnkle Angle:   ");
-    Serial.print (ankleAngle);
-    Serial.print ("\tKneeAngle:   ");
-    Serial.print (theta[0]);
-//    Serial.print("\tPID: ");
-//    Serial.print (pid);
-    Serial.print("\tpwm0: ");
-    Serial.print (pwm[0]);
-    Serial.print("\terr0: ");
-    Serial.print(error[0]);
-    Serial.print ("\tHipAngle:   ");
-    Serial.print (theta[1]);
-//    Serial.print("\tPID: ");
-//    Serial.print (pid);
-    Serial.print("\tpwm1: ");
-    Serial.print (pwm[1]);
-    Serial.print("\tErr1: ");
-    Serial.println(error[1]);
+    if(pwm[0] != 64)
+    {
+      Serial.print("Pot_ADC: ");
+      Serial.print(potAdc);
+      Serial.print ("\tAnkle Angle:   ");
+      Serial.print (ankleAngle);
+      Serial.print ("\tKneeAngle:   ");
+      Serial.print (theta[0]);
+      //Serial.print("\tPID: ");
+      //Serial.print (pid);
+      Serial.print("\tpwm0: ");
+      Serial.print (pwm[0]);
+      Serial.print(" \terr0: ");
+      Serial.print(error[0]);
+      Serial.print ("\tHipAngle:   ");
+      Serial.print (theta[1]);
+      //Serial.print("\tPID: ");
+      //Serial.print (pid);
+      Serial.print("\tpwm1: ");
+      Serial.print (pwm[1]);
+      Serial.print("\terr1: ");
+      Serial.println(error[1]);
+      flag = 1;
+    }
+    else
+      {
+        if(flag == 1)
+        {
+          Serial.print("Pot_ADC: ");
+          Serial.print(potAdc);
+          Serial.print ("\tAnkle Angle:   ");
+          Serial.print (ankleAngle);
+          Serial.print ("\tKneeAngle:   ");
+          Serial.print (theta[0]);
+          //Serial.print("\tPID: ");
+          //Serial.print (pid);
+          Serial.print("\tpwm0: ");
+          Serial.print (pwm[0]);
+          Serial.print(" \terr0: ");
+          Serial.print(error[0]);
+          Serial.print ("\tHipAngle:   ");
+          Serial.print (theta[1]);
+          //Serial.print("\tPID: ");
+          //Serial.print (pid);
+          Serial.print("\tpwm1: ");
+          Serial.print (pwm[1]);
+          Serial.print("\terr1: ");
+          Serial.println(error[1]);
+          
+          runTime = millis()-startTime;
+          Serial.print("\nTime taken: ");
+          Serial.print(runTime);
+          Serial.println(" ms");
+          flag = 0;
+        }
+      }
+}
+
+void actuate()
+{
+    mySerial.write(pwm[0]);
+    mySerial.write(pwm[1]);
 }
 
 void loop() 
@@ -102,7 +157,7 @@ void loop()
     t = millis()/1000.0;
     getAnkleAngle();
     PID();   
-    //rotate(pwm);
+    actuate();
     _print();    
     lt = t;
     t = millis()/1000.0;

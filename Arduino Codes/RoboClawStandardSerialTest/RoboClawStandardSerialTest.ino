@@ -10,6 +10,8 @@ void setup()
 {
   mySerial.begin(38400);
   delay(10);
+
+ // mySerial.write(60);
 }
 
 void loop()
