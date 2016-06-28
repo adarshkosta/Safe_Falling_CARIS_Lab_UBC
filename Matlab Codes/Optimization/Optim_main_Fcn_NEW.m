@@ -29,8 +29,8 @@ M1 = 0.061*M; % Foot and shank mass
 M2 = 0.1*M; % Thigh mass
 M3 = 0.5*(0.678*M); % Half the mass of the HAT segment
 g = 9.8; % gravitational acceleration
-Torque_2 = -12; % Applied torque at the knee joint to generate the initial guess
-Torque_3 = 3; % Applied torque at the hip joint to generate the initial guess
+Torque_2 = -1; % Applied torque at the knee joint to generate the initial guess
+Torque_3 = 0.2; % Applied torque at the hip joint to generate the initial guess
 
 teta_01 = pi/2+5*pi/180; % Ankle angle - Initial condition
 teta_02 = 40*pi/180; % Knee angle - Initial condition
@@ -53,11 +53,11 @@ ini_guess_impact = ini_guess_motion(X_0);
 %% Defining the upper and lower bounds of design variables (states)
 [Y_lb,Y_ub] = lub;
 % %% Solving the optimization problem 
-options = optimoptions(@fmincon,'Algorithm','active-set','MaxFunEvals',10^8,'MaxIter',4000,'TolX',1e-6,'TolCon',1e-6,'TolFun',1e-6,'Display','iter'); % setting desirable options for the optimization 
-[Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
+% options = optimoptions(@fmincon,'Algorithm','active-set','MaxFunEvals',10^8,'MaxIter',4000,'TolX',1e-6,'TolCon',1e-6,'TolFun',1e-6,'Display','iter'); % setting desirable options for the optimization 
+% [Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
 
 %% Generate CSV for state variables
-%generateCSV(Y, 'stateVariables.csv',1);
+generateCSV(Y_0, 'stateVariables.csv');
 
 %% Plotting the motion of the optimal solution
 %optimal_result_impact = optim_result_motion(Y);

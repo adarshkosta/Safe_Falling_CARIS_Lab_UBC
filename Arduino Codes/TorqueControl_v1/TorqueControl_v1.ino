@@ -12,31 +12,34 @@
 #define S2 11
 
 #define POT_PIN A5
-#define PID_LIMIT 63
+#define PID_LIMIT 1.0
+#define PWM_LIMIT 63
 #define ZERO_OFFSET 64
 #define N 10
+#define Kt 0.8576
 
-volatile float target[2] = {3600, 0};
+volatile float torqueTarget[2] = {0.2, 0.2};
 
 SoftwareSerial mySerial(10,11);
 
 int CURR_SENSE_PIN_2 = A4;  // ACS714 +-30A
 int CURR_SENSE_PIN_1 = A3;  // ACS711EX +-15.5A
 
-const float kp[2] = {1.8, 1.8};
-const float ki[2] = {0.0, 0.0};
+const float kp[2] = {1.2, 1.2};
+const float ki[2] = {0.0, 0.2};
 const float kd[2] = {0.0, 0.0};
 
 int initFlag = 0, index = 0;
 volatile double sum[2] = {0}, currStck1[N] = {0}, currStck2[N] = {0};
 
 volatile int potAdc;
-volatile double curr1, curr2;
+volatile double curr[2] = {0};
 volatile float error[2] = {0} , le[2] = {0};
 volatile double t = 0 , lt = 0 ,dt = 0.01 ;
 volatile float integral[2] = {0};
 volatile float diff[2] = {0};
 volatile float pid[2] = {0};
+volatile double tau[2] = {0};
 volatile double theta[2] = {0};
 volatile double ankleAngle = 0;
 volatile int in[2];
@@ -52,12 +55,15 @@ void PID()
   for(i=0; i<2; i++)
   {
     le[i] = error[i];
-    error[i] = target[i] - theta[i];
+    error[i] = torqueTarget[i] - Kt*curr[i];
     integral[i] = integral[i] + error[i] * dt;
     diff[i] = (error[i] - le[i])/dt;
+    
     pid[i] = kp[i]*error[i] +ki[i]*integral[i] + kd[i]*diff[i];
-      
-    pwm[i] = (int)(constrain(pid[i],-PID_LIMIT,PID_LIMIT));
+    pid[i] = constrain(pid[i], -PID_LIMIT, PID_LIMIT);
+    
+    pwm[i] = pid[i]*PWM_LIMIT/PID_LIMIT;
+    pwm[i] = (int)(constrain(pwm[i],-PWM_LIMIT, PWM_LIMIT));
     
     if (abs(pwm[i])<5)
     {
@@ -73,7 +79,7 @@ void setup()
 {
   EIMSK |= (1<<INT0)|(1<<INT1);
   EICRA |= (1<<ISC00)|(1<<ISC10);
-  //EIMSK &= ~(1<<INT1);
+  EIMSK &= ~(1<<INT1);
   sei();
   
   pinMode(S1,OUTPUT);
@@ -175,14 +181,14 @@ void getCurrents()
        sum[1] += currStck2[i];
     }
 
-    curr1 = (double)sum[0]/N;
-    curr2 = (double)sum[1]/N;
+    curr[0] = (double)sum[0]/N;
+    curr[1] = (double)sum[1]/N;
 }
 
 void _print()
 {
-//    Serial.print("Curr1: ");
-    Serial.println(curr1);
+    Serial.print("Curr[0]: ");
+    Serial.print(curr[0]);
 //    Serial.print("\tCurr2: ");
 //    Serial.print(curr2);
 //    Serial.print("\tPotAdc: ");
@@ -191,16 +197,20 @@ void _print()
 //    Serial.print (ankleAngle);
 //    Serial.print ("\tKneeAng:   ");
 //    Serial.print (theta[0]);
-//    //Serial.print("\tPID1: ");
-//    //Serial.print (pid[0]);
-//    Serial.print("\tpwm0: ");
-//    Serial.print (pwm[0]);
-//    Serial.print(" \terr0: ");
-//    Serial.print(error[0]);
+    Serial.print("\tPID: ");
+    Serial.print (pid[0]);
+    Serial.print("\tpwm0: ");
+    Serial.print (pwm[0]);
+    Serial.print(" \terr0: ");
+    Serial.println(error[0]);
+//    Serial.print(" \tintegral0: ");
+//    Serial.print(integral[0]);
+//    Serial.print(" \tdiff0: ");
+//    Serial.println(diff[0]);
 //    Serial.print ("\tHipAng:   ");
 //    Serial.print (theta[1]);
-//    //Serial.print("\tPID2: ");
-//    //Serial.print (pid[1]);
+//    //Serial.print("\tPID: ");
+//    //Serial.print (pid);
 //    Serial.print("\tpwm1: ");
 //    Serial.print (pwm[1]);
 //    Serial.print("\terr1: ");
@@ -274,7 +284,7 @@ void _print1()
 void actuate()
 {
     mySerial.write(pwm[0]);
-    mySerial.write(pwm[1]);
+   // mySerial.write(pwm[1]);
 }
 
 void loop() 
