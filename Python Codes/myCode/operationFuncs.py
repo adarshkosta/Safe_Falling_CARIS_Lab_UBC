@@ -1,4 +1,3 @@
-
 # LOCAL LIBRARIES
 import config
 import torqueList
@@ -8,6 +7,7 @@ import threading
 import time
 import os
 import numpy as np
+import struct
 
 # ELECTRICAL LIBRARIES
 #import roboclaw as rc
@@ -34,18 +34,18 @@ import serial
 
 
 # SERIAL SETUP
-serRead = serial.Serial(config.motorPort, config.baudRateRead)
-#serWrite = serial.Serial(config.posControl, config.baudRateWrite)
+ser = serial.Serial(config.ardPort, config.baudRate)
+ser1 = serial.Serial(config.motorPort, config.baudRate)
 
 
 # UPDATED FOR SERIAL
 def setMotors(pwm_Knee, pwm_Hip):
 	pwm_Knee, pwm_Hip = int(pwm_Knee), int(pwm_Hip)
-	pwm_Hip |= 0x80 #NEEDED FOR MOTOR 1
-	print (str(chr(pwm_Knee)) + ' ' + str(chr(pwm_Hip)) )
-
-	##serWrite.write( str(chr(pwm_Knee)) )
-	##serWrite.write( str(chr(pwm_Hip)) )
+	#pwm_Hip |= 0x80 #NEEDED FOR MOTOR 1
+	#print ('pwm_knee = ', pwm_Knee, '\tpwm_Hip = ', pwm_Hip)
+	dataStream = str(pwm_Knee) + ',' + str(pwm_Hip) + '\n'
+	ser1.write(bytes(dataStream, 'utf-8'))
+	
 
 def readPot():               
 	return config.potVal
@@ -60,9 +60,6 @@ def readAngles():
 
 
 ######################### Electrical Interfacing Functions #########################
-
-
-
 
 
 ## IN PROGRESS
@@ -80,6 +77,7 @@ def readAngles():
 
 # COMPLETE
 def calibrate():
+	time.sleep(0.5)
 	config.calibratedValues = readAngles()
 	config.calibrated = True
 	print('\tReference Positions: {}\n'.format(config.calibratedValues))
@@ -87,7 +85,7 @@ def calibrate():
 
 # COMPLETE
 def killMotors():
-	##serWrite.write(bytes((0,)))
+	##ser1.write(bytes((0,)))
 	print (bytes(0,))
 	return
 
@@ -180,24 +178,24 @@ class positionControl (threading.Thread):
 		self.killEvent = killEvent
 
 	def run(self):
-		target_KNEE, target_HIP = getPulseFromAngle(config.initialAngle_Knee, config.initialAngle_Hip)
+		target_KNEE, target_HIP = config.initialAngle_Knee, config.initialAngle_Hip
 		dt = 0.02
 
 		diff_KNEE, diff_HIP = 1e-9, 1e-9
 		intError_KNEE, intError_HIP = 0, 0
 
-		kP = 1
-		kD = 10
-		kI = 0
+		kP = 1.1
+		kD = 0.0
+		kI = 0.05
 
 		while not self.killEvent.is_set():
 			currentEncoder_KNEE = config.motorPos[1]
 			diff_KNEE, oldDiff_KNEE = (target_KNEE - currentEncoder_KNEE), diff_KNEE
-			propError_KNEE, dervError_KNEE, intError_KNEE, = kP*diff_KNEE, (diff_KNEE - oldDiff_KNEE)/dt, intError_KNEE + diff_KNEE*dt
-			speed_KNEE = int(round(max(min(kP*propError_KNEE + kI*dervError_KNEE + kD*intError_KNEE, 0xFF), -255)))
-			speed_KNEE = max((speed_KNEE+255)//4,1)
-			if diff_KNEE < 5:
-				speed_KNEE = 255//4
+			propError_KNEE, dervError_KNEE, intError_KNEE, = diff_KNEE, (diff_KNEE - oldDiff_KNEE)/dt, intError_KNEE + diff_KNEE*dt
+			speed_KNEE = int(max(min(kP*propError_KNEE + kI*dervError_KNEE + kD*intError_KNEE, 63), -63))
+			speed_KNEE = -speed_KNEE + 64
+			if abs(diff_KNEE) < 5:
+				speed_KNEE = 64
 
 				# railing negative is going to 0
 
@@ -205,16 +203,19 @@ class positionControl (threading.Thread):
 
 			currentEncoder_HIP = config.motorPos[0]
 			diff_HIP, oldDiff_HIP = (target_HIP - currentEncoder_HIP), diff_HIP
-			propError_HIP, dervError_HIP, intError_HIP, = kP*diff_HIP, (diff_HIP - oldDiff_HIP)/dt, intError_HIP + diff_HIP*dt
-			speed_HIP = int(round(max(min(kP*propError_HIP + kI*dervError_HIP + kD*intError_HIP, 0xFF), -255)))
-			speed_HIP = max((speed_KNEE+255)//4,1)
-			if diff_HIP < 5:
-				speed_HIP = 255//4
+			propError_HIP, dervError_HIP, intError_HIP, = diff_HIP, (diff_HIP - oldDiff_HIP)/dt, intError_HIP + diff_HIP*dt
+			speed_HIP = int(max(min(kP*propError_HIP + kI*dervError_HIP + kD*intError_HIP, 63), -63))
+			speed_HIP = speed_HIP + 191
+			if abs(diff_HIP) < 5:
+				speed_HIP = 191
 
 			#print ('HIP: ', diff_HIP, [target_HIP, currentEncoder_HIP], speed_HIP|0x80)
 
 			#print('')
+			print ('target_knee = ', target_KNEE, '\tenc_knee = ', currentEncoder_KNEE, '\terr_knee = ', round(diff_KNEE, 2), 'pwm_knee = ', speed_KNEE, \
+				'\t\ttarget_hip = ', target_HIP, '\tenc_hip = ', currentEncoder_HIP, '\terr_hip = ', round(diff_HIP, 2), 'pwm_hip = ', speed_HIP)
 
+			#print ('err_knee = ', round(diff_KNEE, 2), 'pwm_knee = ', speed_KNEE, '\t\terr_hip = ', round(diff_HIP, 2), 'pwm_hip = ', speed_HIP)
 			setMotors(speed_KNEE, speed_HIP)
 			time.sleep(dt)
 
@@ -237,23 +238,38 @@ class readArdStream (threading.Thread):
 		threading.Thread.__init__(self)
 		self.lastStates = [0]*2
 
+	##def run(self):
+	##	while True:
+	##		if (ser.inWaiting()>0):
+	##			bytePacket = ser.read(3)
+	##			#bytePacket = ser.readline()
+	##
+	##			try:
+	##				start = bytePacket.index(config.startByte)
+	##			except:
+	##				start = 0
+	##
+	##			bytePacket = bytePacket[start:]+bytePacket[:start]
+	##
+	##			config.potVal = bytePacket[1]
+	##			config.motorPos, self.lastStates = decode(bytePacket[2], self.lastStates, config.motorPos)
+	##			#print (config.potVal, config.motorPos)
+
 	def run(self):
 		while True:
-			if (serRead.inWaiting()>0):
-				bytePacket = serRead.read(3)
-				#bytePacket = serRead.readline()
-
-				try:
-					start = bytePacket.index(config.startByte)
-				except:
-					start = 0
-
-				bytePacket = bytePacket[start:]+bytePacket[:start]
-
-				config.potVal = bytePacket[1]
-				config.motorPos, self.lastStates = decode(bytePacket[2], self.lastStates, config.motorPos)
-				#print (config.potVal, config.motorPos)
-
+			if (ser.inWaiting()>0):
+				inData = ser.readline();
+				inData = inData.decode("utf-8")
+				rec = inData.split(',')
+				strlen = len(rec)
+				
+				if (strlen == 4):
+					for i in range(3):
+						rec[i] = float(rec[i])
+					#print (rec[0], rec[1], rec[2])
+					config.potVal = rec[0]
+					config.motorPos[1] = rec[1]
+					config.motorPos[0] = rec[2]
 
 
 
@@ -262,8 +278,8 @@ class readArdStream (threading.Thread):
 if __name__ == "__main__":
 	readArdStream = readArdStream()
 	readArdStream.start()
-#	for i in range(1000):
-#		print('Knee: {2}\tHip: {1}\tHeel: {0}'.format(config.potVal, *config.motorPos))
-#		time.sleep(0.1)#
+	for i in range(1000):
+		print('Knee: {2}\tHip: {1}\tHeel: {0}'.format(config.potVal, *config.motorPos))
+		time.sleep(0.1)
 
 #	exit()

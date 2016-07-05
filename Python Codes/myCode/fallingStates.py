@@ -76,7 +76,7 @@ class fallingSM:
 		print('\nSTARTING!')
 
 		while True:
-			var = raw_input('Options: N (Neutral) / P (Primed) / M (Main Menu)\n')
+			var = input('Options: N (Neutral) / P (Primed) / M (Main Menu)\n')
 			if var in ['N', 'P', 'M']:
 				#killCondition_push.set()
 				return var
@@ -103,7 +103,7 @@ class fallingSM:
 		operationFuncs.killMotors()
 		print('\nNEUTRAL: Apparatus is set to neutral and awaiting feedback to restart.')
 		while True:
-			var = raw_input('Options: M (Main Menu) / R (Restart Falling)\n')
+			var = input('Options: M (Main Menu) / R (Restart Falling)\n')
 			if var in ['M', 'R']:
 				return var
 			else:
@@ -177,8 +177,10 @@ class fallingSM:
 
 		while True:
 			
+			Ki = 1
+
 			# READ PRECOMPUTED DATA FROM MEMORY
-			desiredTorques, torqueResponses, controlMat = config.torqueManager.torqueGoals(timeNow)
+			desiredTorques = config.torqueManager.torqueGoals(timeNow)
 
 			# READ DATA FROM SENSORS AND CALCULATE DERIVED DATA
 			#last_kneeAngle, last_hipAngle, last_heelAngle = kneeAngle, hipAngle, heelAngle
@@ -202,13 +204,14 @@ class fallingSM:
 
 			# CONTROL OPERATIONS
 			#EM_torqueFeedback_adjust = actualTorques
-			EM_torque_adjust = desiredTorques - torqueResponses
+			EM_torque_adjust = desiredTorques # - torqueResponses
 			errorNow = EM_torque_adjust - actualTorques
 
 
 			# INTEGRAL ERROR AND CURRENT CALCULATION
 			intError += errorNow*timeStep
-			outputVoltages, lastPWM = np.dot(controlMat, intError), outputVoltages
+			lastPWM = outputVoltages
+			outputVoltages = Ki*intError; 
 			currents = (outputVoltages - config.angVel_motorConstant*64*np.array([angVel_knee, angVel_hip]).reshape(2,1))\
 						/config.armRes_motorConstant
 						
@@ -218,7 +221,7 @@ class fallingSM:
 			pwm_Knee, pwm_Hip = map(getByteChunk, map(map12Volts, outputVoltages))
 
 			# CONTROL JOINTS
-			operationFuncs.setMotors(pwm_Knee=pwm_Knee, pwm_Hip=pwm_Hip)
+			##operationFuncs.setMotors(pwm_Knee=pwm_Knee, pwm_Hip=pwm_Hip)
 
 			# ASSIGN DATA TO DATA ARRAY
 			unpackList = lambda list2Unpack: [list2Unpack[0][0],list2Unpack[1][0]]

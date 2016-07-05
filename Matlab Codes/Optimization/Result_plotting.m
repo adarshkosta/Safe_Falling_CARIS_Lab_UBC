@@ -1,27 +1,27 @@
 %%% Plotting joint characteristcs
-function Result_plotting(Y,X_0,optimal_result_impact,ini_guess_impact,Time)
+function Result_plotting(X_0,ini_guess_impact,Time)
 global L0 L1 L2 var_array_length
 
-X(:,1) = Y(1:var_array_length);
-X(:,2) = Y(var_array_length+1:2*var_array_length);
-X(:,3) = Y(2*var_array_length+1:3*var_array_length);
-X(:,4) = Y(3*var_array_length+1:4*var_array_length);
-X(:,5) = Y(4*var_array_length+1:5*var_array_length);
-X(:,6) = Y(5*var_array_length+1:6*var_array_length);
-%% Computing the impact linear velocity at hip
-VV = zeros(optimal_result_impact-1,1); % Initializing the array corresponding to the vertical impact velocity of the optimal solution
-VH = zeros(optimal_result_impact-1,1); % Initializing the array corresponding to the horizontal impact velocity of the optimal solution
-VT = zeros(optimal_result_impact-1,1); % Initializing the array corresponding to the total impact velocity of the optimal solution
-
-VV_0 = zeros(ini_guess_impact,1); % Initializing the array corresponding to the vertical impact velocity of the initial guess
-VH_0 = zeros(ini_guess_impact,1); % Initializing the array corresponding to the horizontal impact velocity of the initial guess
-VT_0 = zeros(ini_guess_impact,1); % Initializing the array corresponding to the total impact velocity of the initial guess
-
-for j = 1:optimal_result_impact-1 % Calculating horizontal, vertical and total impact linear velocity of the optimal solution
-    VH(j) = -(L2.*sin(X(j,1)+X(j,2))+(L0+L1).*sin(X(j,1))).*X(j,4)-L2.*sin(X(j,1)+X(j,2)).*X(j,5); % Impact horizontal velocity
-    VV(j) = (L2.*cos(X(j,1)+X(j,2))+(L0+L1).*cos(X(j,1))).*X(j,4)+L2.*cos(X(j,1)+X(j,2)).*X(j,5); % Impact vertical velocity
-    VT(j) = sqrt(VV(j)^2+VH(j)^2); % Impact total velocity
-end
+% X(:,1) = Y(1:var_array_length);
+% X(:,2) = Y(var_array_length+1:2*var_array_length);
+% X(:,3) = Y(2*var_array_length+1:3*var_array_length);
+% X(:,4) = Y(3*var_array_length+1:4*var_array_length);
+% X(:,5) = Y(4*var_array_length+1:5*var_array_length);
+% X(:,6) = Y(5*var_array_length+1:6*var_array_length);
+% %% Computing the impact linear velocity at hip
+% VV = zeros(optimal_result_impact-1,1); % Initializing the array corresponding to the vertical impact velocity of the optimal solution
+% VH = zeros(optimal_result_impact-1,1); % Initializing the array corresponding to the horizontal impact velocity of the optimal solution
+% VT = zeros(optimal_result_impact-1,1); % Initializing the array corresponding to the total impact velocity of the optimal solution
+% 
+% VV_0 = zeros(ini_guess_impact,1); % Initializing the array corresponding to the vertical impact velocity of the initial guess
+% VH_0 = zeros(ini_guess_impact,1); % Initializing the array corresponding to the horizontal impact velocity of the initial guess
+% VT_0 = zeros(ini_guess_impact,1); % Initializing the array corresponding to the total impact velocity of the initial guess
+% 
+% for j = 1:optimal_result_impact-1 % Calculating horizontal, vertical and total impact linear velocity of the optimal solution
+%     VH(j) = -(L2.*sin(X(j,1)+X(j,2))+(L0+L1).*sin(X(j,1))).*X(j,4)-L2.*sin(X(j,1)+X(j,2)).*X(j,5); % Impact horizontal velocity
+%     VV(j) = (L2.*cos(X(j,1)+X(j,2))+(L0+L1).*cos(X(j,1))).*X(j,4)+L2.*cos(X(j,1)+X(j,2)).*X(j,5); % Impact vertical velocity
+%     VT(j) = sqrt(VV(j)^2+VH(j)^2); % Impact total velocity
+% end
 
 for j = 1:ini_guess_impact % Calculating horizontal, vertical and total linear velocity of the initial guess
     VH_0(j) = -(L2.*sin(X_0(j,1)+X_0(j,2))+(L0+L1).*sin(X_0(j,1))).*X_0(j,4)-L2.*sin(X_0(j,1)+X_0(j,2)).*X_0(j,5); % Impact horizontal velocity - initial guess
@@ -32,7 +32,7 @@ end
 figure
 hold on
 box on
-plot (Time(1:optimal_result_impact-1),VV,Time(1:optimal_result_impact-1),VH,'r',Time(1:optimal_result_impact-1),VT,'k');
+% plot (Time(1:optimal_result_impact-1),VV,Time(1:optimal_result_impact-1),VH,'r',Time(1:optimal_result_impact-1),VT,'k');
 plot (Time(1:ini_guess_impact),VV_0,'--b',Time(1:ini_guess_impact),VH_0,'--r',Time(1:ini_guess_impact),VT_0,'--k');
 xlabel('Time(s)');
 ylabel('Hip linear velocity (m/s)');

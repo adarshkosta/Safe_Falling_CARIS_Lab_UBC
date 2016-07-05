@@ -8,8 +8,7 @@ import torqueList
 
 if __name__ == "__main__":
 
-	ex2 = lambda: operationFuncs.serRead.close() & exit() ##operationFuncs.serWrite.close() & exit()
-
+	ex2 = lambda: operationFuncs.ser.close() & exit()
 	readArdStream = operationFuncs.readArdStream()
 	readArdStream.start()
 	#operationFuncs.serWrite.readline()

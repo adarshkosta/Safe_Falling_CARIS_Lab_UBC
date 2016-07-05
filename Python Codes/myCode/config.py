@@ -1,10 +1,10 @@
 ## USER SPECIFIC - OLIVER
-posControl = '/dev/ttyACM0' 
-motorPort = '/dev/ttyACM0'   # Both ports are same now
+ardPort = '/dev/ttyACM0'   
+motorPort = '/dev/ttyACM1' 
 
 dataFolder = '/media/adarsh/DA6E6C0B6E6BDEAF/Summer-2016 UBC/Work/Safe_Falling_CARIS_Lab_UBC'
 matlabPath = dataFolder + 'Matlab Codes/'
-torqueListPath = dataFolder + '/stateVariables.csv'
+torqueListPath = dataFolder + '/Python Codes/myCode/stateVariables20ms.csv'
 
 # USER SPECIFIC - RASPBERRY PI
 #comPorts = ['/dev/ttyACM0']
@@ -21,8 +21,7 @@ torqueListPath = dataFolder + '/stateVariables.csv'
 
 # MOTOR PARAMS
 #address = 0x80
-baudRateRead = 115200
-baudRateWrite = 38400
+baudRate = 38400
 pulsePerRotation = 768 	#12*64
 
 # ADC PARAMS
@@ -70,8 +69,8 @@ thighMass = 1
 trunkMass = 1
 
 # INITIAL ANGLES
-initialAngle_Knee = 40
-initialAngle_Hip = -40
+initialAngle_Knee = 90
+initialAngle_Hip = -90
 
 
 

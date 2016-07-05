@@ -43,7 +43,8 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%
 
-function genControllers(opt_out_filename,pi_in_filename)
+opt_out_filename = 'stateVariables.csv';
+pi_in_filename = 'control.csv';
 
 global alpha beta J_rotor N
 %motor params
@@ -60,7 +61,6 @@ beta = 1/32; %mass scaling factor
 
 %import variables from csv
 M = csvread(opt_out_filename);
-
 %scale results to alpha and beta scaling if optimization was at full scale 
 %convert to rotor side of geartrain. Also Inverts A.
 M = scaledata(M,1,1,1);
@@ -68,7 +68,6 @@ M = scaledata(M,1,1,1);
 t = M(:,1);
 dt_source = t(2)-t(1);
 f_ssource = 1/dt_source;
-
 Te_2 = M(:,2);
 Te_3 = M(:,3);
 a11 = M(:,4);
@@ -85,9 +84,8 @@ Tnet_2 = M(:,14);
 Tnet_3 = M(:,15);
 
 %interpolate optimization data
-fs = 1000; %sampling frequency (Hz)
+fs = 202; %sampling frequency (Hz)
 dt = 1/fs;
-
 t_fine = 0:dt:t(length(t));
 Te_2 = spline(t,Te_2,t_fine);
 Te_3 = spline(t,Te_3,t_fine);
@@ -233,7 +231,6 @@ legend('changing controllers','controler 1','controler 20','controler 40', 'adju
  c3 = C_2x2_p(:,1,2);
  c4 = C_2x2_p(:,2,2);
 
-M2 = [t_fine' Te_2' Te_3' Te_2_response' Te_3_response' c1' c2' c3' c4'];
+M2 = [t_fine' Te_2' Te_3' Te_2_response' Te_3_response' c1 c2 c3 c4];
 csvwrite(pi_in_filename,M2);
 
-end

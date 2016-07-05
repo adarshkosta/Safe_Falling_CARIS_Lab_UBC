@@ -16,7 +16,7 @@
 #define ZERO_OFFSET 64
 #define N 10
 
-volatile float target[2] = {3600, 0};
+volatile float target[2] = {360, 180};
 
 SoftwareSerial mySerial(10,11);
 
@@ -84,7 +84,7 @@ void setup()
   pinMode(enc1A, INPUT); 
   pinMode(enc1B, INPUT); 
   
-  Serial.begin (115200);
+  Serial.begin (38400);
   mySerial.begin(38400);
 
   startTime = millis();
@@ -182,25 +182,25 @@ void getCurrents()
 void _print()
 {
 //    Serial.print("Curr1: ");
-    Serial.println(curr1);
+//    Serial.println(curr1);
 //    Serial.print("\tCurr2: ");
 //    Serial.print(curr2);
-//    Serial.print("\tPotAdc: ");
-//    Serial.print(potAdc);
-//    Serial.print ("\tAnkleAng:   ");
-//    Serial.print (ankleAngle);
-//    Serial.print ("\tKneeAng:   ");
-//    Serial.print (theta[0]);
-//    //Serial.print("\tPID1: ");
-//    //Serial.print (pid[0]);
-//    Serial.print("\tpwm0: ");
-//    Serial.print (pwm[0]);
-//    Serial.print(" \terr0: ");
-//    Serial.print(error[0]);
-//    Serial.print ("\tHipAng:   ");
-//    Serial.print (theta[1]);
-//    //Serial.print("\tPID2: ");
-//    //Serial.print (pid[1]);
+    Serial.print("PotAdc: ");
+    Serial.print(potAdc);
+    Serial.print ("\tAnkleAng:   ");
+    Serial.print (ankleAngle);
+    Serial.print ("\tKneeAng:   ");
+    Serial.print (theta[0]);
+    //Serial.print("\tPID1: ");
+    //Serial.print (pid[0]);
+    Serial.print("\tpwm0: ");
+    Serial.print (pwm[0]);
+    Serial.print(" \terr0: ");
+    Serial.print(error[0]);
+    Serial.print ("\tHipAng:   ");
+    Serial.println (theta[1]);
+    //Serial.print("\tPID2: ");
+    //Serial.print (pid[1]);
 //    Serial.print("\tpwm1: ");
 //    Serial.print (pwm[1]);
 //    Serial.print("\terr1: ");

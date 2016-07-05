@@ -7,7 +7,7 @@
 %%% teta = [teta_1 ; teta_2 ; teta_3 ; dteta_1 ; dteta_2 ; dteta_3]
 %%% dteta = [dteta_1 ; dteta_2 ; dteta_3 ; ddteta_1 ; ddteta_2 ; ddteta_3]
 %%% dteta = [teta(4) ; teta(5) ; teta(6) ; D(1) ; D(2) ; D(3)]
-function generateCSV(Y, filename)
+function generateCSV(Y, filename, impact_time)
 global J_rotor N L0 L1 L2 L3 M1 M2 M3 rCOM_1 rCOM_2 rCOM_3 g rG_1 rG_2 rG_3 dt teta_01 teta_02 teta_03 dteta_01 dteta_02 dteta_03 var_array_length
 
 X_0(1,1) = teta_01;  % Ankle angle - Initial condition
@@ -18,9 +18,10 @@ X_0(1,5) = dteta_02; % Knee angular velocity - Initial condition
 X_0(1,6) = dteta_03; % Hip angular velocity - Initial condition
 
 
-outMat = zeros(var_array_length, 15);
+outMat = zeros(impact_time, 15);
+outData = zeros(impact_time, 3);
 
-for i = 2:var_array_length % Generating the initial guess using forward differencing method
+for i = 2:impact_time % Generating the initial guess using forward differencing method
     
     optimizedData = reshape(Y,[length(Y)/8,8]);
     kneeTorque = optimizedData(i, 7);
@@ -75,16 +76,21 @@ for i = 2:var_array_length % Generating the initial guess using forward differen
     X_0(i,7) = kneeTorque;
     X_0(i,8) = hipTorque;
     
+    
     outMat(i, 1) = (i-1)*dt;
     outMat(i, 2) = kneeTorque;
     outMat(i, 3) = hipTorque;
     outMat(i, 4:12) = tA(:);
     outMat(i, 13:15) = C';
     
+    outData(i,1) = (i-1)*dt;
+    outData(i, 2:4) = C';
+    
    
 end
 
 outMat(1,2:end) = outMat(2,2:end);
-csvwrite(filename,outMat)
+outData(1,2:end) = outData(2,2:end);
+csvwrite(filename,outData)
 
 end

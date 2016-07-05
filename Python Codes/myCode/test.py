@@ -1,15 +1,25 @@
 import serial
 import time
 
-ardSerial = serial.Serial('/dev/ttyACM0', 115200)
+ardSerial = serial.Serial('/dev/ttyACM0', 38400)
 
-while True:
+data1 = str(40)
+data2 = str(95)
+data3 = "yayy"
+
+data = data1 + ',' + data2 + ',' + data3 + '\n'
+while 1 == 1:
 	if (ardSerial.inWaiting()>0):
-		#bytePacket = [ord(i) for i in serRead.read(3)]
-		inData = [ord(i) for i in ardSerial.read(3)];
-		#inData[0] = int(inData[0])
-		#inData[1] = int(inData[1])
-		#inData[2] = int(inData[2])
-		print(inData)
-		#print (inData[0], inData[1], inData[2])
+		inData = ardSerial.readline();
+		inData = inData.decode("utf-8")
+		rec = inData.split(',')
+		strlen = len(rec)
 		
+		if (strlen == 4):
+			for i in range(3):
+				rec[i] = float(rec[i])
+			print (rec[0], rec[1], rec[2])
+		
+		#print(inData)
+	#ardSerial.write(bytes(data, 'utf-8'))
+	

@@ -10,8 +10,8 @@ global alpha beta N J_rotor L0 L1 L2 L3 L4 M1 M2 M3 rCOM_1 rCOM_2 rCOM_3 g rG_1 
 
 N = 64; %speed reduction factor
 J_rotor = 5.7e-7; %rotor inertia
-alpha = 1;  % Length scaling factor
-beta = 1;  % Mass scaling factor
+alpha = 0.5;  % Length scaling factor
+beta = .0625;  % Mass scaling factor
 L = 1.60*alpha;  % Total height of the human subject
 M = 53.7*beta;  % Total mass of the human subject
 L0 = 0.039*L; % foot height
@@ -29,7 +29,7 @@ M1 = 0.061*M; % Foot and shank mass
 M2 = 0.1*M; % Thigh mass
 M3 = 0.5*(0.678*M); % Half the mass of the HAT segment
 g = 9.8; % gravitational acceleration
-Torque_2 = -1; % Applied torque at the knee joint to generate the initial guess
+Torque_2 = -0.5; % Applied torque at the knee joint to generate the initial guess
 Torque_3 = 0.2; % Applied torque at the hip joint to generate the initial guess
 
 teta_01 = pi/2+5*pi/180; % Ankle angle - Initial condition
@@ -39,8 +39,10 @@ dteta_01 = 0 ; % Ankle angular velocity - Initial condition
 dteta_02 = 0; % Knee angular velocity - Initial condition
 dteta_03 = 0; % Hip angular velocity - Initial condition
 
-t_final = 0.5*sqrt(alpha); % Pre-set terminal time
-dt = 0.01*sqrt(alpha); % time step
+t_final = 1; % Pre-set terminal time
+%t_final = 0.5*sqrt(alpha); % Pre-set terminal time
+dt = 0.005; % time step
+%dt = 0.01*sqrt(alpha); % time step
 Time = 0:dt:t_final;
 var_array_length = length(Time); % Length of the array defining each design varibale
 
@@ -57,13 +59,13 @@ ini_guess_impact = ini_guess_motion(X_0);
 % [Y,fval,exitflag,output] = fmincon(@Obj_Fcn,Y_0,[],[],[],[],Y_lb,Y_ub,@NonLin_Cons,options); % running the fmincon optimization
 
 %% Generate CSV for state variables
-generateCSV(Y_0, 'stateVariables.csv');
+generateCSV(Y_0, 'stateVariables.csv', ini_guess_impact);
 
 %% Plotting the motion of the optimal solution
 %optimal_result_impact = optim_result_motion(Y);
 
 %% Plotting the joint characteristics during the fall including joint angle, angular velocity and torque
-%Result_plotting(Y,X_0,optimal_result_impact,ini_guess_impact,Time);
+%Result_plotting(X_0,ini_guess_impact,Time);
 
 %% Saving data
 %save('Results')
