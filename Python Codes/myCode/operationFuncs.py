@@ -100,21 +100,22 @@ class fallConditionCheck (threading.Thread):
 		threading.Thread.__init__(self)
 		self.killEvent = killEvent
 		self.successEvent = successEvent
-		self.angDiff_thresh = 1
-		self.timeInterval = 0.05
+		self.angDiff_thresh = 45
+		#self.timeInterval = 0.05
 
 
 	# TODO: modify run() to determine fall condition
 	# Fall condition: read potentiometer, check if angular velocity above threshold, then run
 	def run(self):
 		while not self.killEvent.is_set():
-			angle1 = readPot() # read potentiometer
-			time.sleep(self.timeInterval)
-			angle2 = readPot() # read potentiometer
-			angDiff = (angle2-angle1)
+			#time.sleep(self.timeInterval)
+			#angle2 = readPot() # read potentiometer
+			#angDiff = (angle2-angle1)
+			#print(config.potVal)
 			#print(angDiff)
-			if angDiff > self.angDiff_thresh:
+			if abs(config.potVal) > self.angDiff_thresh:
 				self.successEvent.set()
+				print('FALLING..!!!!')
 				return
 
 
@@ -184,15 +185,19 @@ class positionControl (threading.Thread):
 		diff_KNEE, diff_HIP = 1e-9, 1e-9
 		intError_KNEE, intError_HIP = 0, 0
 
-		kP = 1.1
-		kD = 0.0
-		kI = 0.05
+		kP_h = 1.5
+		kD_h = 0.0
+		kI_h = 0.05
+
+		kP_k = 1.5
+		kD_k = 0.0
+		kI_k = 0.05
 
 		while not self.killEvent.is_set():
 			currentEncoder_KNEE = config.motorPos[1]
 			diff_KNEE, oldDiff_KNEE = (target_KNEE - currentEncoder_KNEE), diff_KNEE
 			propError_KNEE, dervError_KNEE, intError_KNEE, = diff_KNEE, (diff_KNEE - oldDiff_KNEE)/dt, intError_KNEE + diff_KNEE*dt
-			speed_KNEE = int(max(min(kP*propError_KNEE + kI*dervError_KNEE + kD*intError_KNEE, 63), -63))
+			speed_KNEE = int(max(min(kP_k*propError_KNEE + kI_k*dervError_KNEE + kD_k*intError_KNEE, 63), -63))
 			speed_KNEE = -speed_KNEE + 64
 			if abs(diff_KNEE) < 5:
 				speed_KNEE = 64
@@ -204,7 +209,7 @@ class positionControl (threading.Thread):
 			currentEncoder_HIP = config.motorPos[0]
 			diff_HIP, oldDiff_HIP = (target_HIP - currentEncoder_HIP), diff_HIP
 			propError_HIP, dervError_HIP, intError_HIP, = diff_HIP, (diff_HIP - oldDiff_HIP)/dt, intError_HIP + diff_HIP*dt
-			speed_HIP = int(max(min(kP*propError_HIP + kI*dervError_HIP + kD*intError_HIP, 63), -63))
+			speed_HIP = int(max(min(kP_h*propError_HIP + kI_h*dervError_HIP + kD_h*intError_HIP, 63), -63))
 			speed_HIP = speed_HIP + 191
 			if abs(diff_HIP) < 5:
 				speed_HIP = 191
@@ -212,10 +217,12 @@ class positionControl (threading.Thread):
 			#print ('HIP: ', diff_HIP, [target_HIP, currentEncoder_HIP], speed_HIP|0x80)
 
 			#print('')
-			print ('target_knee = ', target_KNEE, '\tenc_knee = ', currentEncoder_KNEE, '\terr_knee = ', round(diff_KNEE, 2), 'pwm_knee = ', speed_KNEE, \
-				'\t\ttarget_hip = ', target_HIP, '\tenc_hip = ', currentEncoder_HIP, '\terr_hip = ', round(diff_HIP, 2), 'pwm_hip = ', speed_HIP)
+			#print ('target_knee = ', target_KNEE, '\tenc_knee = ', currentEncoder_KNEE, '\terr_knee = ', round(diff_KNEE, 2), 'pwm_knee = ', speed_KNEE, \
+			#	'\t\ttarget_hip = ', target_HIP, '\tenc_hip = ', currentEncoder_HIP, '\terr_hip = ', round(diff_HIP, 2), 'pwm_hip = ', speed_HIP, '\tpotVal = ', config.potVal)
 
 			#print ('err_knee = ', round(diff_KNEE, 2), 'pwm_knee = ', speed_KNEE, '\t\terr_hip = ', round(diff_HIP, 2), 'pwm_hip = ', speed_HIP)
+			
+			
 			setMotors(speed_KNEE, speed_HIP)
 			time.sleep(dt)
 
@@ -270,6 +277,7 @@ class readArdStream (threading.Thread):
 					config.potVal = rec[0]
 					config.motorPos[1] = rec[1]
 					config.motorPos[0] = rec[2]
+					print(config.potVal)
 
 
 

@@ -69,8 +69,8 @@ thighMass = 1
 trunkMass = 1
 
 # INITIAL ANGLES
-initialAngle_Knee = 90
-initialAngle_Hip = -90
+initialAngle_Knee = -40  ## -40
+initialAngle_Hip = 40  ## +40
 
 
 

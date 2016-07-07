@@ -166,6 +166,8 @@ class fallingSM:
 		angAcc_knee, angAcc_hip, angAcc_heel = [0]*3
 
 		currents = np.zeros((2,1))
+		map12Volts = np.zeros((2,1))
+		getByteChunk = np.zeros((2,1))
 
 		intError = np.zeros((2,1))
 		intErrorMax = 1000
@@ -216,13 +218,19 @@ class fallingSM:
 						/config.armRes_motorConstant
 						
 			# GET PWM INPUT FROM VOLTAGES
-			map12Volts = lambda x: max(min(x, 6),-6)+6
-			getByteChunk = lambda x: 1+round(x * 126.0/12)
-			pwm_Knee, pwm_Hip = map(getByteChunk, map(map12Volts, outputVoltages))
+			##map12Volts = lambda x: max(min(x, 6),-6)+6
+			##getByteChunk = lambda x: 1+round(x * 126.0/12)
+			##pwm_Knee, pwm_Hip = map(getByteChunk, map(map12Volts, outputVoltages))
+
+			map12Volts[0] = max(min(outputVoltages[0], 6),-6)+6
+			map12Volts[1] = max(min(outputVoltages[1], 6),-6)+6
+			getByteChunk[0] = 1 + int(map12Volts[0] * 126.0/12)
+			getByteChunk[1] = 1 + int(map12Volts[1] * 126.0/12)
+			pwm_Knee, pwm_Hip = getByteChunk
 
 			# CONTROL JOINTS
 			##operationFuncs.setMotors(pwm_Knee=pwm_Knee, pwm_Hip=pwm_Hip)
-
+			print(pwm_Knee, pwm_Hip)
 			# ASSIGN DATA TO DATA ARRAY
 			unpackList = lambda list2Unpack: [list2Unpack[0][0],list2Unpack[1][0]]
 			self.fallingData[dataIndex, :] = [timeNow, kneeAngle, hipAngle, heelAngle] + unpackList(actualTorques.tolist())

@@ -16,7 +16,7 @@
 #define ZERO_OFFSET 64
 #define N 10
 
-volatile float target[2] = {360, 180};
+volatile float target[2] = {20, 20};
 
 SoftwareSerial mySerial(10,11);
 
@@ -198,13 +198,13 @@ void _print()
     Serial.print(" \terr0: ");
     Serial.print(error[0]);
     Serial.print ("\tHipAng:   ");
-    Serial.println (theta[1]);
+    Serial.print (theta[1]);
     //Serial.print("\tPID2: ");
     //Serial.print (pid[1]);
-//    Serial.print("\tpwm1: ");
-//    Serial.print (pwm[1]);
-//    Serial.print("\terr1: ");
-//    Serial.print(error[1]);
+    Serial.print("\tpwm1: ");
+    Serial.print (pwm[1]);
+    Serial.print("\terr1: ");
+    Serial.println(error[1]);
 //    
 //    Serial.print("\tdt: ");
 //    Serial.println(dt);
